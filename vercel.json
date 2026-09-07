@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/rigby-100-mile-territory.html", "destination": "/index.html" }
+  ]
+}
