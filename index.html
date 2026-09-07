@@ -249,6 +249,33 @@ a{color:var(--accent)}
 .foot b{color:var(--ink-2); font-weight:600}
 .contact{font-size:12px; color:var(--ink-2); display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center}
 .contact b{color:var(--ink); font-weight:600}
+/* ---------- beyond the territory ---------- */
+.beyond{cursor:pointer}
+.beyond-ray{stroke:var(--accent,#d98a3d); stroke-width:1.4; stroke-dasharray:3 3; opacity:.75}
+.beyond-dot{fill:none; stroke:var(--accent,#d98a3d); stroke-width:2}
+.beyond:hover .beyond-dot,.beyond:focus .beyond-dot{fill:var(--accent,#d98a3d)}
+.beyond-n{font-family:'Archivo',sans-serif; font-size:12px; font-weight:700; letter-spacing:.04em;
+  fill:var(--accent,#d98a3d); pointer-events:none}
+.beyond-mi{font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.05em;
+  fill:var(--ink-3,#8b97a6); pointer-events:none}
+.bhead{display:flex; justify-content:space-between; align-items:baseline; margin:22px 0 8px;
+  padding-top:16px; border-top:1px solid var(--line,#2a3340);
+  font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink-3,#8b97a6)}
+.beyond-row .nm{color:var(--accent,#d98a3d)}
+.beyond-fill{background:repeating-linear-gradient(90deg,var(--accent,#d98a3d) 0 4px,transparent 4px 8px); opacity:.6}
+.bnote{margin:10px 2px 0; font-size:10.5px; line-height:1.5; color:var(--ink-3,#8b97a6)}
+.d-kick{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--accent,#d98a3d); margin-bottom:6px}
+.d-rows{margin:14px 0; display:flex; flex-direction:column; gap:7px}
+.d-rows div{display:flex; justify-content:space-between; gap:14px; font-size:12.5px;
+  padding-bottom:7px; border-bottom:1px solid var(--line,#2a3340)}
+.d-rows span{color:var(--ink-3,#8b97a6)}
+.d-rows b{font-family:'IBM Plex Mono',monospace}
+.d-note{font-size:12px; line-height:1.62; margin:12px 0 0}
+.d-fine{font-size:10.5px; color:var(--ink-3,#8b97a6)}
+.d-src{display:inline-block; margin-top:12px; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:.05em; color:var(--accent,#d98a3d)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
 </style>
 
@@ -280,6 +307,11 @@ a{color:var(--accent)}
     <div class="pane" id="pane-cities" role="tabpanel" aria-labelledby="tab-cities">
       <div class="chead"><span>City, ranked by density</span><span>11+ staff</span></div>
       <div class="ctable" id="ctable"></div>
+      <div class="bhead"><span>Beyond the territory</span><span>Establishments</span></div>
+      <div class="ctable" id="btable"></div>
+      <p class="bnote">BLS establishment counts, a different measure from the directory
+        figures above. Kept out of the headline totals and the density ranking so the
+        two are never added together.</p>
     </div>
     <div class="pane" id="pane-props" role="tabpanel" aria-labelledby="tab-props" hidden>
       <div class="rail-head">
@@ -393,6 +425,40 @@ const GC = {Industrial:"var(--g-ind)",Logistics:"var(--g-log)",Institutional:"va
 const GLABEL = {Industrial:"Industrial & processing",Logistics:"Logistics, storage & transport",Institutional:"Institutional",Commercial:"Retail, hotel & leisure"};
 const ZLABEL = {1:"0–25 mi",2:"25–65 mi",3:"65–100 mi"};
 const P = DATA.prospects, C = DATA.cities;
+/* ---------- beyond the territory ----------
+   Salt Lake City and Boise are the two metros that bracket eastern Idaho. Both
+   sit roughly twice the 100-mile radius away, so they are NOT territory: they
+   are the answer to "how big is what's next door".
+
+   These counts are BLS QCEW establishments (Q1 2026) — physical locations with
+   paid employees. That is a DIFFERENT measure from the `biz` figures on the
+   territory cities, which come from the business-directory pull this map was
+   built on. They are deliberately kept out of the headline totals and out of
+   the density ranking for exactly that reason: mixing the two would produce a
+   ranking that means nothing. */
+DATA.beyond = [
+  {
+    k: "slc", n: "Salt Lake City", sub: "Wasatch Front, UT",
+    lat: 40.7608, lon: -111.8910, mi: 201, drive: "3h 15m",
+    est: 67367, emp: 806300,
+    wider: { n: "Wasatch Front", est: 108368, emp: 1372456,
+             note: "Salt Lake, Utah, Davis and Weber counties combined" },
+    src: "https://www.bls.gov/regions/mountain-plains/news-release/countyemploymentandwages_utah.htm",
+    srcLabel: "BLS QCEW, Q1 2026",
+    note: "Salt Lake County on its own carries more than three times the business count of the entire 100-mile territory. Add Utah, Davis and Weber and the Wasatch Front is over five times it. Nothing about the territory competes with this on volume — but it is a 3-hour drive each way, and it is the most contested coating market in the Intermountain West."
+  },
+  {
+    k: "boi", n: "Boise", sub: "Treasure Valley, ID",
+    lat: 43.6150, lon: -116.2023, mi: 214, drive: "4h 15m",
+    est: 25027, emp: 295338,
+    wider: { n: "Treasure Valley", est: 33625, emp: 385469,
+             note: "Ada and Canyon counties combined" },
+    src: "https://www.bls.gov/regions/west/news-release/countyemploymentandwages_idaho.htm",
+    srcLabel: "BLS QCEW, Q1 2026",
+    note: "Ada County alone slightly exceeds the whole territory's business count, and with Canyon County the Treasure Valley is about 1.6 times it. Same state, same licensing, same building stock — the practical obstacle is distance, not market."
+  }
+];
+
 const cityByKey = Object.fromEntries(C.map(c=>[c.k,c]));
 const fmt = n => n.toLocaleString("en-US");
 
@@ -526,6 +592,41 @@ function hideTip(){tip.style.opacity=0;}
 
 /* ---------- rail: cities ---------- */
 const ctable=document.getElementById("ctable");
+function renderBeyond(){
+  const t=document.getElementById("btable"); if(!t) return;
+  t.innerHTML="";
+  DATA.beyond.forEach(m=>{
+    const b=document.createElement("button");
+    b.className="crow beyond-row"; b.type="button";
+    b.innerHTML=`<div><div class="nm">${m.n}</div><div class="sub">${m.mi} mi · ${m.drive} · outside the ring</div></div>
+      <div class="v">${fmt(m.est)}<small>${fmt(m.emp)} jobs</small></div>
+      <div class="track"><div class="fill beyond-fill" style="width:100%"></div></div>`;
+    b.onclick=()=>openBeyond(m.k);
+    t.appendChild(b);
+  });
+}
+
+function openBeyond(k){
+  const m=DATA.beyond.find(x=>x.k===k); if(!m) return;
+  const terr=C.filter(c=>c.d).reduce((a,c)=>a+c.biz,0);
+  const detail=document.getElementById("detail");
+  detail.hidden=false;
+  detail.innerHTML=`<button class="x" aria-label="Close">×</button>
+    <div class="d-kick">Outside the territory</div>
+    <h3>${m.n}</h3>
+    <div class="d-sub">${m.sub} · ${m.mi} mi from Rigby · about ${m.drive} each way</div>
+    <div class="d-rows">
+      <div><span>Establishments</span><b>${fmt(m.est)}</b></div>
+      <div><span>Employment</span><b>${fmt(m.emp)}</b></div>
+      <div><span>${m.wider.n}</span><b>${fmt(m.wider.est)}</b></div>
+      <div><span>vs. this territory</span><b>${(m.est/terr).toFixed(1)}× its ${fmt(terr)} businesses</b></div>
+    </div>
+    <p class="d-note">${m.note}</p>
+    <p class="d-note d-fine">${m.wider.note}. Figures are ${m.srcLabel} — establishments with paid employees, which is not the same measure as the directory counts used for the territory cities, so the two should not be summed.</p>
+    <a class="d-src" href="${m.src}" target="_blank" rel="noreferrer noopener">Source: ${m.srcLabel}</a>`;
+  detail.querySelector(".x").onclick=()=>{detail.hidden=true;};
+}
+
 function renderCities(){
   ctable.innerHTML="";
   const max=Math.max(...C.filter(c=>c.d).map(c=>c.b11));
@@ -541,6 +642,40 @@ function renderCities(){
     ctable.appendChild(b);
   });
 }
+
+/* ---------- beyond-territory edge markers ----------
+   Salt Lake projects to y≈1055 on a 760-tall canvas and Boise to x≈-190, so
+   neither fits. Rescaling the map to include them would shrink the territory
+   detail that is the point of it. Instead each is clamped to the edge along
+   the real bearing from Rigby and labelled with its distance, so the direction
+   and the scale both read without moving the map. */
+(function drawBeyond(){
+  const [bx,by]=proj(LON0,LAT0), PAD=34;
+  DATA.beyond.forEach(m=>{
+    const [tx,ty]=proj(m.lon,m.lat);
+    const dx=tx-bx, dy=ty-by;
+    // how far along the ray we can travel before leaving the canvas
+    const ts=[];
+    if(dx) ts.push(((dx>0?W-PAD:PAD)-bx)/dx);
+    if(dy) ts.push(((dy>0?H-PAD:PAD)-by)/dy);
+    const t=Math.min(...ts.filter(v=>v>0));
+    const x=bx+dx*t, y=by+dy*t;
+    const ang=Math.atan2(dy,dx)*180/Math.PI;
+
+    const g=el("g",{class:"beyond",tabindex:0,role:"button",
+                    "aria-label":`${m.n}, ${m.mi} miles, outside the territory`},gMarks);
+    el("line",{x1:x-Math.cos(ang*Math.PI/180)*16,y1:y-Math.sin(ang*Math.PI/180)*16,
+               x2:x,y2:y,class:"beyond-ray"},g);
+    el("circle",{cx:x,cy:y,r:6,class:"beyond-dot"},g);
+    const lx=x-Math.cos(ang*Math.PI/180)*22, ly=y-Math.sin(ang*Math.PI/180)*22;
+    const t1=el("text",{x:lx,y:ly-4,class:"beyond-n","text-anchor":dx>0?"end":"start"},g);
+    t1.textContent=m.n.toUpperCase();
+    const t2=el("text",{x:lx,y:ly+9,class:"beyond-mi","text-anchor":dx>0?"end":"start"},g);
+    t2.textContent=`${m.mi} MI · ${fmt(m.est)} EST.`;
+    g.onclick=()=>openBeyond(m.k);
+    g.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openBeyond(m.k);}};
+  });
+})();
 
 /* ---------- rail: properties ---------- */
 const chips=(id,items,set,render)=>{
@@ -659,6 +794,6 @@ P.filter(p=>p.pf>1).sort((a,b)=>b.pf-a.pf).slice(0,7).forEach(p=>{
   const li=document.createElement("li"); li.innerHTML=`<span>${p.n}<div class="c">${p.ct}, ${p.st} · ${p.mi} mi</div></span><span class="q">${p.pf} roofs</span>`; pf.appendChild(li);
 });
 
-renderCities(); renderList();
+renderCities(); renderBeyond(); renderList();
 </script>
 </body></html>
